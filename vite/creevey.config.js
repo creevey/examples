@@ -1,8 +1,17 @@
 const path = require("path");
 const { hybridStoriesProvider } = require("creevey");
+const { execSync } = require("child_process");
+
+const resolverStorybookUrl = (port) => {
+  const ip = execSync(
+    'curl -X GET https://fake.testkontur.ru/ip -H "Accept: */*"',
+    { stdio: "pipe" }
+  ).toString();
+  return `http://${ip}:${port}`;
+};
 
 const config = {
-  storybookUrl: `http://localhost:6006`,
+  storybookUrl: resolverStorybookUrl(6006),
   storybookDir: path.join(__dirname, ".storybook"),
   reportDir: path.join(__dirname, "report"),
   screenDir: path.join(__dirname, "images"),
