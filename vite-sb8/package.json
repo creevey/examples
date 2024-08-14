@@ -1,5 +1,5 @@
 {
-  "name": "webpack-ts",
+  "name": "sb7-creevey-vite",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -14,18 +14,18 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@storybook/addon-essentials": "^7.6.20",
-    "@storybook/addon-interactions": "^7.6.20",
-    "@storybook/addon-links": "^7.6.20",
-    "@storybook/addon-onboarding": "^1.0.10",
-    "@storybook/blocks": "^7.6.20",
-    "@storybook/react": "^7.6.20",
-    "@storybook/react-webpack5": "^7.6.20",
-    "@storybook/test": "^7.6.20",
+    "@storybook/addon-essentials": "^8.2.4",
+    "@storybook/addon-interactions": "^8.2.4",
+    "@storybook/addon-links": "^8.2.4",
+    "@storybook/addon-onboarding": "^8.2.4",
+    "@storybook/blocks": "^8.2.4",
+    "@storybook/react": "^8.2.4",
+    "@storybook/react-vite": "^8.2.4",
+    "@storybook/test": "^8.2.4",
     "creevey": "0.9.0-beta.15",
-    "prop-types": "^15.8.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "storybook": "^7.6.20"
+    "storybook": "^8.2.4",
+    "vite": "^5.3.4"
   }
 }

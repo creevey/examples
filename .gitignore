@@ -2,3 +2,4 @@ node_modules
 .cache
 report
 *storybook.log
+.DS_Store
