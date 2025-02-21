@@ -1,0 +1,38 @@
+grid:
+  image: docker-proxy.kontur.host/node:20
+  tags: [idevops]
+  stage: test
+  parallel:
+    matrix:
+      - FIXTURE:
+          - esm
+          - playwright-grid
+          - vite
+          - vite-sb8
+          - webpack
+          - webpack-sb8
+          - yarn-pnp
+  script:
+   - cd $FIXTURE
+   - yarn
+   - yarn creevey -s
+
+local:
+  image: docker-proxy.kontur.host/node:20
+  tags: [idevops]
+  stage: test
+  variables:
+    DOCKER: true
+  script:
+   - cd playwright-docker
+   - yarn
+   - yarn dlx playwright install --with-deps chromium
+   - yarn creevey -s
+
+docker:
+  tags: [docker]
+  stage: test
+  script:
+    - cd playwright-docker
+    - yarn
+    - yarn creevey -s

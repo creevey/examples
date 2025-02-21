@@ -2691,9 +2691,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"creevey-vite-esm@workspace:.":
+"creevey-esm@workspace:.":
   version: 0.0.0-use.local
-  resolution: "creevey-vite-esm@workspace:."
+  resolution: "creevey-esm@workspace:."
   dependencies:
     "@storybook/addon-essentials": "npm:8.5.6"
     "@storybook/addon-interactions": "npm:8.5.6"
