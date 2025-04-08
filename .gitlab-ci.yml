@@ -16,7 +16,10 @@ grid:
   script:
    - cd $FIXTURE
    - yarn
-   - yarn creevey -s
+   - yarn creevey -s --debug
+  artifacts:
+    paths:
+      - $FIXTURE/report
 
 local:
   image: docker-proxy.kontur.host/node:20
@@ -29,7 +32,10 @@ local:
    - cd playwright-docker
    - yarn
    - yarn dlx playwright install --with-deps chromium
-   - yarn creevey -s
+   - yarn creevey -s --debug
+  artifacts:
+    paths:
+      - playwright-docker/report
 
 docker:
   image: docker-proxy.kontur.host/node:20
@@ -39,4 +45,7 @@ docker:
   script:
     - cd playwright-docker
     - yarn
-    - yarn creevey -s
+    - yarn creevey -s --debug
+  artifacts:
+    paths:
+      - playwright-docker/report
