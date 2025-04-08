@@ -20,7 +20,7 @@
     "@storybook/react": "8.5.6",
     "@storybook/react-vite": "8.5.6",
     "@storybook/test": "8.5.6",
-    "creevey": "0.10.0-beta.31",
+    "creevey": "0.10.0-beta.36",
     "playwright-core": "1.50.1",
     "react": "18.3.1",
     "react-dom": "18.3.1",
