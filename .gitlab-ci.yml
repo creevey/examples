@@ -16,7 +16,9 @@ grid:
   script:
    - cd $FIXTURE
    - yarn
-   - yarn creevey -s --debug
+   - yarn storybook build
+   - yarn http-server ./storybook-static -p 6006 -s &
+   - yarn creevey --debug
   artifacts:
     paths:
       - $FIXTURE/report
@@ -32,7 +34,9 @@ local:
    - cd playwright-docker
    - yarn
    - yarn dlx playwright@1.50.1 install --with-deps chromium
-   - yarn creevey -s --debug
+   - yarn storybook build
+   - yarn http-server ./storybook-static -p 6006 -s &
+   - yarn creevey --debug
   artifacts:
     paths:
       - playwright-docker/report
@@ -45,7 +49,9 @@ docker:
   script:
     - cd playwright-docker
     - yarn
-    - yarn creevey -s --debug
+    - yarn storybook build
+    - yarn http-server ./storybook-static -p 6006 -s &
+    - yarn creevey --debug
   artifacts:
     paths:
       - playwright-docker/report
