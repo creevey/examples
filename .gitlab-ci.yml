@@ -1,7 +1,7 @@
 grid:
   image: docker-proxy.kontur.host/node:20
   tags:
-    - idevops-k8s-staging
+    - idevops
   stage: test
   parallel:
     matrix:
@@ -24,14 +24,14 @@ grid:
 local:
   image: docker-proxy.kontur.host/node:20
   tags:
-    - idevops-k8s-staging
+    - idevops
   stage: test
   variables:
     DOCKER: true
   script:
    - cd playwright-docker
    - yarn
-   - yarn dlx playwright install --with-deps chromium
+   - yarn dlx playwright@1.50.1 install --with-deps chromium
    - yarn creevey -s --debug
   artifacts:
     paths:
