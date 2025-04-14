@@ -1,7 +1,7 @@
 grid:
   image: docker-proxy.kontur.host/node:20
-  tags:
-    - idevops
+  tags: 
+    - idevops-k8s
   stage: test
   parallel:
     matrix:
