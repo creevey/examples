@@ -1,5 +1,5 @@
 grid:
-  image: docker-proxy.kontur.host/node:20
+  image: docker-proxy.kontur.host/node:20-alpine
   tags: 
     - idevops-k8s
   stage: test
