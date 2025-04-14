@@ -5428,7 +5428,7 @@ __metadata:
     "@storybook/react": "npm:7.6.20"
     "@storybook/react-vite": "npm:7.6.20"
     "@storybook/test": "npm:7.6.20"
-    creevey: "npm:0.10.0-beta.37"
+    creevey: "npm:0.10.0-beta.42"
     http-server: "npm:^14.1.1"
     react: "npm:18.3.1"
     react-dom: "npm:18.3.1"
@@ -5438,9 +5438,9 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"creevey@npm:0.10.0-beta.37":
-  version: 0.10.0-beta.37
-  resolution: "creevey@npm:0.10.0-beta.37"
+"creevey@npm:0.10.0-beta.42":
+  version: 0.10.0-beta.42
+  resolution: "creevey@npm:0.10.0-beta.42"
   dependencies:
     "@koa/cors": "npm:^5.0.0"
     "@octokit/core": "npm:^6.1.4"
@@ -5502,7 +5502,7 @@ __metadata:
       optional: true
   bin:
     creevey: dist/cli.js
-  checksum: 10c0/932ab6baefb21e75330b268902eeaac8bcbae679612a3e5b06477e4acc7b06bd1480b76db645466b103600d331cb7cdecc792628fe19affb85da60571a6f3763
+  checksum: 10c0/fa4e4f10b09089e558232118ef6395d338c53dd9496be24f43b10454a348c6acecedbd205b5b17bfe4f7cb9173147545ccafdec8f8368b63d83f89f3360606f0
   languageName: node
   linkType: hard
 

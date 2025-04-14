@@ -9,7 +9,11 @@ const config: CreeveyConfig = {
   resolveStorybookUrl: () =>
     fetch("https://fake.testkontur.ru/ip")
       .then((res) => res.text())
-      .then((data) => `http://${data}:6006`),
+      .then((data) => {
+        const url = `http://${process.env.CONTAINER_IP ?? data}:6006`
+        console.log('[Creevey] Resolved Storybook URL:', url);
+        return url;
+      }),
   testsDir: path.join(__dirname, "stories"),
   webdriver: PlaywrightWebdriver,
   gridUrl: "https://grid.skbkontur.ru/common/wd/hub",

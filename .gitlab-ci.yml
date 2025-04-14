@@ -18,7 +18,8 @@ grid:
    - yarn
    - yarn build-storybook
    - yarn http-server ./storybook-static -p 6006 -s &
-   - yarn creevey --debug
+   - CONTAINER_IP=$(ip a | grep "global eth0" | cut -c 10- | sed -r 's/[/].+//')
+   - CONTAINER_IP=$CONTAINER_IP yarn creevey --debug
   artifacts:
     paths:
       - $FIXTURE/report
