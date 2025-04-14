@@ -4,3 +4,4 @@ report
 *storybook.log
 .DS_Store
 *.tgz
+storybook-static
