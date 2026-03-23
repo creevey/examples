@@ -1,0 +1,26 @@
+{
+  "name": "creevey-esm-vite-sb9-playwright",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "storybook": "storybook dev --ci -p 6006",
+    "build-storybook": "storybook build",
+    "creevey": "creevey",
+    "creevey:ui": "creevey --ui",
+    "creevey:update": "creevey --update"
+  },
+  "devDependencies": {
+    "@storybook/addon-essentials": "^9.1.20",
+    "@storybook/react": "^9.1.20",
+    "@storybook/react-vite": "^9.1.20",
+    "@vitejs/plugin-react": "^4.3.0",
+    "creevey": "^0.10.0",
+    "http-server": "^14.1.1",
+    "playwright-core": "^1.50.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "storybook": "^9.1.20",
+    "vite": "^5.4.0"
+  }
+}
