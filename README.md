@@ -2,6 +2,12 @@
 
 Demo configurations for Storybook 8/9/10 with Creevey, covering CJS/ESM, Webpack/Vite, multiple package managers, and runtimes.
 
+## CI Status
+
+[![Creevey Screenshot Tests](https://github.com/wKich/sb7-creevey/actions/workflows/creevey-tests.yml/badge.svg)](https://github.com/wKich/sb7-creevey/actions/workflows/creevey-tests.yml)
+[![Selenium Grid Tests](https://github.com/wKich/sb7-creevey/actions/workflows/creevey-selenium.yml/badge.svg)](https://github.com/wKich/sb7-creevey/actions/workflows/creevey-selenium.yml)
+[![Playwright Docker Tests](https://github.com/wKich/sb7-creevey/actions/workflows/creevey-playwright.yml/badge.svg)](https://github.com/wKich/sb7-creevey/actions/workflows/creevey-playwright.yml)
+
 ## Projects
 
 ### Selenium Grid Projects (9 projects)
@@ -96,12 +102,20 @@ pnpm dlx creevey
 
 ## CI/CD
 
-GitLab CI includes 12 jobs covering all project variants:
+GitHub Actions workflows cover all 13 project variants:
 
-- Selenium Grid jobs use `node:20-alpine` with Selenium services
-- Playwright jobs use `mcr.microsoft.com/playwright` images
-- Bun job uses `oven/bun:1.2`
-- SB10 jobs require Node 22+
+- **Selenium Grid tests** (`creevey-selenium.yml`) - 9 projects using Selenium WebDriver
+- **Playwright Docker tests** (`creevey-playwright.yml`) - 2 projects using Playwright
+- **Bun runtime tests** (`creevey-bun.yml`) - 1 project using Bun runtime
+
+**Features:**
+- Automatic testing on push/PR to main/master
+- Manual workflow dispatch with test type selection
+- Matrix strategy for parallel execution
+- Test artifacts uploaded for 7 days
+- PR comments with test results
+
+See [docs/CI-MIGRATION.md](docs/CI-MIGRATION.md) for migration details from GitLab CI.
 
 ## Browser Configuration
 
