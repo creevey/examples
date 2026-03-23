@@ -57,7 +57,7 @@ jobs:
 
       - name: Setup pnpm
         if: ${{ hashFiles(format('{0}/pnpm-workspace.yaml', inputs.fixture)) != '' }}
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         with:
           version: 9
 
