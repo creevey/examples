@@ -1,0 +1,52 @@
+name: Creevey Screenshot Tests
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      test-type:
+        description: 'Test type to run'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - selenium
+          - playwright
+          - bun
+
+jobs:
+  # Determine which tests to run
+  selenium:
+    if: ${{ github.event.inputs.test-type == 'all' || github.event.inputs.test-type == 'selenium' || github.event_name != 'workflow_dispatch' }}
+    uses: ./.github/workflows/creevey-selenium.yml
+    secrets: inherit
+
+  playwright:
+    if: ${{ github.event.inputs.test-type == 'all' || github.event.inputs.test-type == 'playwright' || github.event_name != 'workflow_dispatch' }}
+    uses: ./.github/workflows/creevey-playwright.yml
+    secrets: inherit
+
+  bun:
+    if: ${{ github.event.inputs.test-type == 'all' || github.event.inputs.test-type == 'bun' || github.event_name != 'workflow_dispatch' }}
+    uses: ./.github/workflows/creevey-bun.yml
+    secrets: inherit
+
+  # Summary job that depends on all test jobs
+  test-summary:
+    needs: [selenium, playwright, bun]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test Summary
+        run: |
+          echo "## Creevey Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Type | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Selenium Grid | ${{ needs.selenium.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Playwright Docker | ${{ needs.playwright.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Bun Runtime | ${{ needs.bun.result }} |" >> $GITHUB_STEP_SUMMARY
