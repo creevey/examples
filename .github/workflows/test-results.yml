@@ -1,0 +1,55 @@
+name: Post Test Results
+
+on:
+  workflow_run:
+    workflows: ["Creevey Screenshot Tests"]
+    types:
+      - completed
+
+jobs:
+  post-results:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.event == 'pull_request'
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: creevey-report-*
+          merge-multiple: false
+
+      - name: Post PR comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: pullRequests } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.payload.workflow_run.head_sha
+            });
+            
+            if (pullRequests.length === 0) {
+              console.log('No PR found for this commit');
+              return;
+            }
+            
+            const prNumber = pullRequests[0].number;
+            const workflowRun = context.payload.workflow_run;
+            const conclusion = workflowRun.conclusion;
+            const status = conclusion === 'success' ? '✅ PASSED' : '❌ FAILED';
+            
+            const body = `## Creevey Screenshot Test Results ${status}
+            
+            **Workflow:** [${workflowRun.name} #${workflowRun.run_number}](${workflowRun.html_url})
+            **Commit:** ${workflowRun.head_sha.substring(0, 7)}
+            **Conclusion:** ${conclusion}
+            
+            ${conclusion === 'failure' ? '⚠️ Please check the artifacts for screenshot diffs.' : 'All screenshot tests passed!'}
+            `;
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: body
+            });
