@@ -11,17 +11,16 @@
     "creevey:update": "creevey --update"
   },
   "devDependencies": {
-    "@storybook/addon-essentials": "^10.3.1",
     "@storybook/react": "^10.3.1",
     "@storybook/react-vite": "^10.3.1",
-    "@vitejs/plugin-react": "^4.3.0",
-    "creevey": "^0.10.0",
+    "@vitejs/plugin-react": "^6.0.1",
+    "creevey": "^0.10.35",
     "http-server": "^14.1.1",
-    "react": "^18.3.0",
-    "react-dom": "^18.3.0",
-    "selenium-webdriver": "^4.28.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "selenium-webdriver": "^4.41.0",
     "storybook": "^10.3.1",
-    "vite": "^5.4.0 || ^6.0.0"
+    "vite": "^8.0.1"
   },
   "engines": {
     "node": ">=20.19.0 || >=22.12.0"
