@@ -1,0 +1,112 @@
+name: Selenium Test Template
+
+on:
+  workflow_call:
+    inputs:
+      fixture:
+        required: true
+        type: string
+        description: 'Project directory name'
+      node-version:
+        required: false
+        type: string
+        default: '20'
+        description: 'Node.js version'
+      use-full-node:
+        required: false
+        type: boolean
+        default: false
+        description: 'Use full node image instead of alpine'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      selenium-hub:
+        image: selenium/hub:4.18.1-20240220
+        ports:
+          - 4444:4444
+        options: >-
+          --health-cmd "curl -f http://localhost:4444/wd/hub/status || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      selenium-node-chrome:
+        image: selenium/node-chrome:4.18.1-20240220
+        env:
+          SE_EVENT_BUS_HOST: selenium-hub
+          SE_EVENT_BUS_PUBLISH_PORT: 4442
+          SE_EVENT_BUS_SUBSCRIBE_PORT: 4443
+          HUB_HOST: selenium-hub
+          HUB_PORT: 4444
+        options: >-
+          --health-cmd "curl -f http://localhost:5555/status || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        if: ${{ !inputs.use-full-node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+
+      - name: Setup pnpm
+        if: ${{ hashFiles(format('{0}/pnpm-workspace.yaml', inputs.fixture)) != '' }}
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Detect and install dependencies
+        working-directory: ${{ inputs.fixture }}
+        run: |
+          if [ -f "pnpm-workspace.yaml" ]; then
+            pnpm install
+          elif [ -f ".yarnrc.yml" ]; then
+            corepack enable
+            yarn install
+          else
+            npm install
+          fi
+
+      - name: Build Storybook
+        working-directory: ${{ inputs.fixture }}
+        run: |
+          if [ -f "pnpm-workspace.yaml" ]; then
+            pnpm run build-storybook
+          elif [ -f ".yarnrc.yml" ]; then
+            yarn build-storybook
+          else
+            npm run build-storybook
+          fi
+
+      - name: Start Storybook server
+        working-directory: ${{ inputs.fixture }}
+        run: |
+          npx http-server ./storybook-static -p 6006 -s &
+          npx wait-on http://localhost:6006 --timeout 30000
+
+      - name: Run Creevey tests
+        working-directory: ${{ inputs.fixture }}
+        env:
+          SELENIUM_GRID_URL: http://localhost:4444/wd/hub
+        run: |
+          if [ -f "pnpm-workspace.yaml" ]; then
+            pnpm exec creevey --debug
+          elif [ -f ".yarnrc.yml" ]; then
+            yarn creevey --debug
+          else
+            npx creevey --debug
+          fi
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: creevey-report-${{ inputs.fixture }}
+          path: ${{ inputs.fixture }}/report
+          retention-days: 7
