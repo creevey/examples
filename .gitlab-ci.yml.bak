@@ -1,0 +1,139 @@
+stages:
+  - test
+
+variables:
+  SELENIUM_GRID_URL: "http://selenium-hub:4444/wd/hub"
+
+# Template for Selenium-based projects
+.selenium-template: &selenium-template
+  image: node:20-alpine
+  tags:
+    - docker-build
+  stage: test
+  services:
+    - name: selenium/hub:4.18.1-20240220
+      alias: selenium-hub
+    - name: selenium/node-chrome:4.18.1-20240220
+      alias: selenium-node-chrome
+  before_script:
+    - cd $FIXTURE
+    - |
+      if [ -f "pnpm-workspace.yaml" ]; then
+        npm install -g pnpm@9
+        pnpm install
+      elif [ -f ".yarnrc.yml" ]; then
+        yarn install
+      else
+        npm install
+      fi
+  script:
+    - npm run build-storybook
+    - npx http-server ./storybook-static -p 6006 -s &
+    - npx creevey --debug
+  artifacts:
+    paths:
+      - $FIXTURE/report
+    expire_in: 1 week
+
+# Selenium Grid projects
+selenium-cjs-webpack-sb8:
+  <<: *selenium-template
+  variables:
+    FIXTURE: "cjs-webpack-sb8"
+
+selenium-cjs-vite-sb8:
+  <<: *selenium-template
+  variables:
+    FIXTURE: "cjs-vite-sb8"
+
+selenium-esm-webpack-sb8:
+  <<: *selenium-template
+  variables:
+    FIXTURE: "esm-webpack-sb8"
+
+selenium-esm-vite-sb8:
+  <<: *selenium-template
+  variables:
+    FIXTURE: "esm-vite-sb8"
+
+selenium-esm-vite-sb9:
+  <<: *selenium-template
+  variables:
+    FIXTURE: "esm-vite-sb9"
+
+selenium-esm-vite-sb9-yarn-pnp:
+  <<: *selenium-template
+  variables:
+    FIXTURE: "esm-vite-sb9-yarn-pnp"
+
+selenium-esm-vite-sb9-pnpm:
+  <<: *selenium-template
+  variables:
+    FIXTURE: "esm-vite-sb9-pnpm"
+
+selenium-esm-vite-sb9-playwright:
+  <<: *selenium-template
+  image: node:20  # Playwright needs full node image
+  variables:
+    FIXTURE: "esm-vite-sb9-playwright"
+
+selenium-esm-vite-sb10:
+  <<: *selenium-template
+  image: node:22-alpine  # SB10 requires Node 20.19+ or 22.12+
+  variables:
+    FIXTURE: "esm-vite-sb10"
+
+# Playwright Docker projects
+playwright-esm-vite-sb9:
+  image: mcr.microsoft.com/playwright:v1.50.0-jammy
+  tags:
+    - docker-build
+  stage: test
+  variables:
+    FIXTURE: "playwright-esm-vite-sb9"
+  script:
+    - cd $FIXTURE
+    - npm install
+    - npm run build-storybook
+    - npx http-server ./storybook-static -p 6006 -s &
+    - npx creevey --debug
+  artifacts:
+    paths:
+      - $FIXTURE/report
+    expire_in: 1 week
+
+playwright-esm-vite-sb10-bun:
+  image: oven/bun:1.2
+  tags:
+    - docker-build
+  stage: test
+  variables:
+    FIXTURE: "playwright-esm-vite-sb10-bun"
+  script:
+    - cd $FIXTURE
+    - bun install
+    - bun run build-storybook
+    - bunx http-server ./storybook-static -p 6006 -s &
+    - bunx creevey --debug
+  artifacts:
+    paths:
+      - $FIXTURE/report
+    expire_in: 1 week
+
+playwright-esm-vite-sb10-react19:
+  image: mcr.microsoft.com/playwright:v1.50.0-jammy
+  tags:
+    - docker-build
+  stage: test
+  variables:
+    FIXTURE: "playwright-esm-vite-sb10-react19"
+  script:
+    - cd $FIXTURE
+    - npm install
+    - npm run build-storybook
+    - npx http-server ./storybook-static -p 6006 -s &
+    - npx creevey --debug
+  artifacts:
+    paths:
+      - $FIXTURE/report
+    expire_in: 1 week
