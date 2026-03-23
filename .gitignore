@@ -5,3 +5,7 @@ report
 .DS_Store
 *.tgz
 storybook-static
+
+# Selenium Grid
+.docker/
+*.log
