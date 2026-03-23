@@ -1,0 +1,25 @@
+{
+  "name": "creevey-esm-webpack-sb8",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "storybook": "storybook dev --ci -p 6006",
+    "build-storybook": "storybook build",
+    "creevey": "creevey",
+    "creevey:ui": "creevey --ui",
+    "creevey:update": "creevey --update"
+  },
+  "devDependencies": {
+    "@storybook/addon-essentials": "^8.6.0",
+    "@storybook/addon-webpack5-compiler-swc": "^1.0.0",
+    "@storybook/react": "^8.6.0",
+    "@storybook/react-webpack5": "^8.6.0",
+    "creevey": "^0.10.0",
+    "http-server": "^14.1.1",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "selenium-webdriver": "^4.28.0",
+    "storybook": "^8.6.0"
+  }
+}
