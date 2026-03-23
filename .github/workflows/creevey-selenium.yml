@@ -1,0 +1,45 @@
+name: Creevey Screenshot Tests - Selenium Grid
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  # Standard Selenium projects (Node 20, alpine)
+  selenium-tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        fixture:
+          - cjs-webpack-sb8
+          - cjs-vite-sb8
+          - esm-webpack-sb8
+          - esm-vite-sb8
+          - esm-vite-sb9
+        include:
+          - fixture: esm-vite-sb9-yarn-pnp
+            node-version: '20'
+          - fixture: esm-vite-sb9-pnpm
+            node-version: '20'
+    uses: ./.github/workflows/selenium-template.yml
+    with:
+      fixture: ${{ matrix.fixture }}
+      node-version: '20'
+
+  # Playwright variant (requires full Node image)
+  selenium-playwright:
+    uses: ./.github/workflows/selenium-template.yml
+    with:
+      fixture: esm-vite-sb9-playwright
+      node-version: '20'
+      use-full-node: true
+
+  # Storybook 10 projects (requires Node 22)
+  selenium-sb10:
+    uses: ./.github/workflows/selenium-template.yml
+    with:
+      fixture: esm-vite-sb10
+      node-version: '22'
