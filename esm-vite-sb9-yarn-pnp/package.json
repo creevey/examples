@@ -13,14 +13,14 @@
   "devDependencies": {
     "@storybook/react": "^9.1.20",
     "@storybook/react-vite": "^9.1.20",
-    "@vitejs/plugin-react": "^6.0.1",
+    "@vitejs/plugin-react": "^5.2.0",
     "creevey": "^0.10.35",
     "http-server": "^14.1.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "selenium-webdriver": "^4.41.0",
     "storybook": "^9.1.20",
-    "vite": "^6.0.1"
+    "vite": "^7.3.1"
   },
   "packageManager": "yarn@4.13.0+sha512.5c20ba010c99815433e5c8453112165e673f1c7948d8d2b267f4b5e52097538658388ebc9f9580656d9b75c5cc996f990f611f99304a2197d4c56d21eea370e7"
 }

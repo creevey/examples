@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "@storybook/addon-essentials": "^8.6.0",
-    "@storybook/addon-webpack5-compiler-swc": "^2.1.0",
+    "@storybook/addon-webpack5-compiler-swc": "^1.0.0",
     "@storybook/react": "^8.6.0",
     "@storybook/react-webpack5": "^8.6.0",
     "creevey": "^0.10.35",
