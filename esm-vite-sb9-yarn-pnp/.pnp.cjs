@@ -1762,7 +1762,7 @@ const RAW_RUNTIME_STATE =
         "packageLocation": "../../../../.yarn/berry/cache/@types-docker-modem-npm-3.0.6-513f0186bc-10c0.zip/node_modules/@types/docker-modem/",\
         "packageDependencies": [\
           ["@types/docker-modem", "npm:3.0.6"],\
-          ["@types/node", "npm:25.5.0"],\
+          ["@types/node", "npm:25.5.1"],\
           ["@types/ssh2", "npm:1.15.5"]\
         ],\
         "linkType": "HARD"\
@@ -1774,7 +1774,7 @@ const RAW_RUNTIME_STATE =
         "packageDependencies": [\
           ["@types/docker-modem", "npm:3.0.6"],\
           ["@types/dockerode", "npm:3.3.47"],\
-          ["@types/node", "npm:25.5.0"],\
+          ["@types/node", "npm:25.5.1"],\
           ["@types/ssh2", "npm:1.15.5"]\
         ],\
         "linkType": "HARD"\
@@ -1826,10 +1826,10 @@ const RAW_RUNTIME_STATE =
         ],\
         "linkType": "HARD"\
       }],\
-      ["npm:25.5.0", {\
-        "packageLocation": "../../../../.yarn/berry/cache/@types-node-npm-25.5.0-49c7b83d02-10c0.zip/node_modules/@types/node/",\
+      ["npm:25.5.1", {\
+        "packageLocation": "../../../../.yarn/berry/cache/@types-node-npm-25.5.1-c0d51978f9-10c0.zip/node_modules/@types/node/",\
         "packageDependencies": [\
-          ["@types/node", "npm:25.5.0"],\
+          ["@types/node", "npm:25.5.1"],\
           ["undici-types", "npm:7.18.2"]\
         ],\
         "linkType": "HARD"\
@@ -1839,7 +1839,7 @@ const RAW_RUNTIME_STATE =
       ["npm:5.2.6", {\
         "packageLocation": "../../../../.yarn/berry/cache/@types-pixelmatch-npm-5.2.6-365a481e4b-10c0.zip/node_modules/@types/pixelmatch/",\
         "packageDependencies": [\
-          ["@types/node", "npm:25.5.0"],\
+          ["@types/node", "npm:25.5.1"],\
           ["@types/pixelmatch", "npm:5.2.6"]\
         ],\
         "linkType": "HARD"\
@@ -1849,7 +1849,7 @@ const RAW_RUNTIME_STATE =
       ["npm:6.0.5", {\
         "packageLocation": "../../../../.yarn/berry/cache/@types-pngjs-npm-6.0.5-1b6b7a0d1d-10c0.zip/node_modules/@types/pngjs/",\
         "packageDependencies": [\
-          ["@types/node", "npm:25.5.0"],\
+          ["@types/node", "npm:25.5.1"],\
           ["@types/pngjs", "npm:6.0.5"]\
         ],\
         "linkType": "HARD"\
@@ -1917,7 +1917,7 @@ const RAW_RUNTIME_STATE =
       ["npm:4.35.5", {\
         "packageLocation": "../../../../.yarn/berry/cache/@types-selenium-webdriver-npm-4.35.5-3f5c8a206e-10c0.zip/node_modules/@types/selenium-webdriver/",\
         "packageDependencies": [\
-          ["@types/node", "npm:25.5.0"],\
+          ["@types/node", "npm:25.5.1"],\
           ["@types/selenium-webdriver", "npm:4.35.5"],\
           ["@types/ws", "npm:8.18.1"]\
         ],\
@@ -1928,7 +1928,7 @@ const RAW_RUNTIME_STATE =
       ["npm:0.8.17", {\
         "packageLocation": "../../../../.yarn/berry/cache/@types-shelljs-npm-0.8.17-0af45303ee-10c0.zip/node_modules/@types/shelljs/",\
         "packageDependencies": [\
-          ["@types/node", "npm:25.5.0"],\
+          ["@types/node", "npm:25.5.1"],\
           ["@types/shelljs", "npm:0.8.17"],\
           ["glob", "npm:11.1.0"]\
         ],\
@@ -1949,7 +1949,7 @@ const RAW_RUNTIME_STATE =
       ["npm:8.18.1", {\
         "packageLocation": "../../../../.yarn/berry/cache/@types-ws-npm-8.18.1-61dc106ff0-10c0.zip/node_modules/@types/ws/",\
         "packageDependencies": [\
-          ["@types/node", "npm:25.5.0"],\
+          ["@types/node", "npm:25.5.1"],\
           ["@types/ws", "npm:8.18.1"]\
         ],\
         "linkType": "HARD"\
@@ -4658,7 +4658,7 @@ const RAW_RUNTIME_STATE =
           ["@protobufjs/path", "npm:1.1.2"],\
           ["@protobufjs/pool", "npm:1.1.0"],\
           ["@protobufjs/utf8", "npm:1.1.0"],\
-          ["@types/node", "npm:25.5.0"],\
+          ["@types/node", "npm:25.5.1"],\
           ["long", "npm:5.3.2"],\
           ["protobufjs", "npm:7.5.4"]\
         ],\

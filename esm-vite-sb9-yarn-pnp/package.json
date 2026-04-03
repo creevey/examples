@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "storybook": "storybook dev --ci -p 6006",
     "build-storybook": "storybook build",

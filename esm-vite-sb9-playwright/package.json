@@ -5,7 +5,7 @@
   "type": "module",
   "packageManager": "npm@10.9.7",
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.0.0"
   },
   "scripts": {
     "storybook": "storybook dev --ci -p 6006",
