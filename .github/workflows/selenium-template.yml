@@ -8,15 +8,17 @@ on:
         type: string
         description: 'Project directory name'
       node-version:
+        required: true
+        type: string
+        description: 'Node.js version (20, 22, or 24)'
+      package-manager:
+        required: true
+        type: string
+        description: 'Package manager (npm, pnpm, yarn)'
+      package-manager-version:
         required: false
         type: string
-        default: '20'
-        description: 'Node.js version'
-      use-full-node:
-        required: false
-        type: boolean
-        default: false
-        description: 'Use full node image instead of alpine'
+        description: 'Package manager version (e.g., 10.9.7, 9.15.9, 4.13.0)'
 
 jobs:
   test:
@@ -50,24 +52,29 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Node.js
-        if: ${{ !inputs.use-full-node }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
 
-      - name: Setup pnpm
-        if: ${{ hashFiles(format('{0}/pnpm-workspace.yaml', inputs.fixture)) != '' }}
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
+      - name: Enable Corepack
+        run: corepack enable
 
-      - name: Detect and install dependencies
+      - name: Prepare package manager
+        run: |
+          if [ "${{ inputs.package-manager }}" = "pnpm" ]; then
+            corepack prepare pnpm@${{ inputs.package-manager-version }} --activate
+          elif [ "${{ inputs.package-manager }}" = "yarn" ]; then
+            corepack prepare yarn@${{ inputs.package-manager-version }} --activate
+          elif [ "${{ inputs.package-manager }}" = "npm" ] && [ -n "${{ inputs.package-manager-version }}" ]; then
+            corepack prepare npm@${{ inputs.package-manager-version }} --activate
+          fi
+
+      - name: Install dependencies
         working-directory: ${{ inputs.fixture }}
         run: |
-          if [ -f "pnpm-workspace.yaml" ]; then
+          if [ "${{ inputs.package-manager }}" = "pnpm" ]; then
             pnpm install
-          elif [ -f ".yarnrc.yml" ]; then
-            corepack enable
+          elif [ "${{ inputs.package-manager }}" = "yarn" ]; then
             yarn install
           else
             npm install
@@ -76,9 +83,9 @@ jobs:
       - name: Build Storybook
         working-directory: ${{ inputs.fixture }}
         run: |
-          if [ -f "pnpm-workspace.yaml" ]; then
+          if [ "${{ inputs.package-manager }}" = "pnpm" ]; then
             pnpm run build-storybook
-          elif [ -f ".yarnrc.yml" ]; then
+          elif [ "${{ inputs.package-manager }}" = "yarn" ]; then
             yarn build-storybook
           else
             npm run build-storybook
@@ -95,9 +102,9 @@ jobs:
         env:
           SELENIUM_GRID_URL: http://localhost:4444/wd/hub
         run: |
-          if [ -f "pnpm-workspace.yaml" ]; then
+          if [ "${{ inputs.package-manager }}" = "pnpm" ]; then
             pnpm exec creevey --debug
-          elif [ -f ".yarnrc.yml" ]; then
+          elif [ "${{ inputs.package-manager }}" = "yarn" ]; then
             yarn creevey --debug
           else
             npx creevey --debug

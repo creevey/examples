@@ -16,28 +16,23 @@ on:
           - all
           - selenium
           - playwright
-          - bun
 
 jobs:
-  # Determine which tests to run
+  # Selenium Grid tests
   selenium:
     if: ${{ github.event.inputs.test-type == 'all' || github.event.inputs.test-type == 'selenium' || github.event_name != 'workflow_dispatch' }}
     uses: ./.github/workflows/creevey-selenium.yml
     secrets: inherit
 
+  # Playwright tests (includes Bun)
   playwright:
     if: ${{ github.event.inputs.test-type == 'all' || github.event.inputs.test-type == 'playwright' || github.event_name != 'workflow_dispatch' }}
     uses: ./.github/workflows/creevey-playwright.yml
     secrets: inherit
 
-  bun:
-    if: ${{ github.event.inputs.test-type == 'all' || github.event.inputs.test-type == 'bun' || github.event_name != 'workflow_dispatch' }}
-    uses: ./.github/workflows/creevey-bun.yml
-    secrets: inherit
-
   # Summary job that depends on all test jobs
   test-summary:
-    needs: [selenium, playwright, bun]
+    needs: [selenium, playwright]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -45,8 +40,21 @@ jobs:
         run: |
           echo "## Creevey Test Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Environment Versions" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Component | Version |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|---------|" >> $GITHUB_STEP_SUMMARY
+          echo "| SB8 Projects | Node 20 + npm 10.9.7 |" >> $GITHUB_STEP_SUMMARY
+          echo "| SB9 Projects | Node 22 + npm 10.9.7 |" >> $GITHUB_STEP_SUMMARY
+          echo "| SB10 Projects | Node 24 + npm 10.9.7 |" >> $GITHUB_STEP_SUMMARY
+          echo "| pnpm Variant | Node 22 + pnpm 9.15.9 |" >> $GITHUB_STEP_SUMMARY
+          echo "| Yarn PnP Variant | Node 22 + yarn 4.13.0 |" >> $GITHUB_STEP_SUMMARY
+          echo "| Bun Variant | Bun 1.3.11 |" >> $GITHUB_STEP_SUMMARY
+          echo "| Playwright | 1.59.1 |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Test Type | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
           echo "| Selenium Grid | ${{ needs.selenium.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Playwright Docker | ${{ needs.playwright.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Bun Runtime | ${{ needs.bun.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Playwright (Node + Bun) | ${{ needs.playwright.result }} |" >> $GITHUB_STEP_SUMMARY

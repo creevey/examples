@@ -4,9 +4,15 @@ This repository contains demo configurations for Creevey visual regression testi
 
 ## Repository Structure
 
-- Multiple example projects in subdirectories (e.g., `esm-vite-sb9/`, `playwright-esm-vite-sb10/`)
+- **16 example projects** in subdirectories covering different configurations:
+  - Storybook versions: SB8, SB9, SB10
+  - Module systems: ESM, CJS
+  - Bundlers: Vite, Webpack
+  - Webdrivers: Selenium, Playwright
+  - Package managers: npm, pnpm, Yarn PnP, Bun
 - Each project is self-contained with its own `package.json` and dependencies
 - CI workflows in `.github/workflows/`
+- Verification scripts in `scripts/` for local testing
 
 ## Development Environment Setup (fnm + Corepack)
 
@@ -84,6 +90,36 @@ npm run creevey:ui        # Run with UI mode
 npm run creevey:update    # Update baselines
 ```
 
+### Local Verification Scripts
+
+New verification scripts for local development that validate Storybook builds:
+
+```bash
+# Verify a single project (auto-detects webdriver type)
+./scripts/verify-storybook.sh esm-vite-sb9
+./scripts/verify-storybook.sh -p 6010 esm-vite-sb9-playwright
+
+# Batch verify all projects
+./scripts/verify-all.sh
+
+# Manual verification with Selenium Grid
+./scripts/start-grid.sh   # Start Selenium Grid (requires Docker)
+cd esm-vite-sb9
+npm run build-storybook
+npx http-server ./storybook-static -p 6006 -s &
+node ./scripts/verify-storybook-selenium.mjs
+./scripts/stop-grid.sh
+```
+
+Verification scripts automatically:
+- Detect the webdriver type (Selenium vs Playwright) from `creevey.config.mjs`
+- Detect the package manager (npm, pnpm, yarn, bun)
+- Install dependencies if needed
+- Build Storybook
+- Start a static server
+- Verify Storybook loads correctly in a real browser
+- Report console errors and Storybook initialization status
+
 ### Selenium Grid (Local Development)
 
 ```bash
@@ -106,8 +142,10 @@ gh workflow run creevey-tests.yml
 
 # Specific test types
 gh workflow run creevey-selenium.yml    # Selenium Grid tests (9 projects)
-gh workflow run creevey-playwright.yml  # Playwright Docker tests (2 projects)
-gh workflow run creevey-bun.yml         # Bun runtime tests (1 project)
+gh workflow run creevey-playwright.yml  # Playwright Docker tests (3 projects: 2 Node + 1 Bun)
+
+# With test type filter
+gh workflow run creevey-tests.yml -f test-type=selenium
 ```
 
 ## Code Style Guidelines
@@ -206,18 +244,38 @@ Projects use different package managers based on purpose:
 
 | Project Type | Node Version |
 |--------------|-------------|
-| SB8, SB9 projects | Node 20+ |
-| SB10 projects | Node 22+ |
+| SB8 projects | Node 20+ |
+| SB9 projects | Node 22+ |
+| SB10 projects | Node 24+ |
 | Bun projects | Bun runtime |
 
 ## Error Handling
 
-- CI scripts use `set -e` for bash error handling
+- CI scripts use `set -Eeuo pipefail` for bash error handling
 - GitHub Actions use `fail-fast: false` in matrices to run all variants
 - Test artifacts are uploaded even on failure (`if: always()`)
+- Verification scripts use trap for cleanup on exit/interrupt
 
 ## Git Workflow
 
 - Default branch: `master`
 - CI triggers on push/PR to `master`
 - Workflows support manual dispatch with test type selection
+- Test results are posted as PR comments via `test-results.yml`
+
+## Available Projects
+
+| Project | SB Version | Module | Bundler | Webdriver | Package Manager |
+|---------|------------|--------|---------|-----------|-----------------|
+| cjs-vite-sb8 | 8 | CJS | Vite | Selenium | npm |
+| cjs-webpack-sb8 | 8 | CJS | Webpack | Selenium | npm |
+| esm-webpack-sb8 | 8 | ESM | Webpack | Selenium | npm |
+| esm-vite-sb8 | 8 | ESM | Vite | Selenium | npm |
+| esm-vite-sb9 | 9 | ESM | Vite | Selenium | npm |
+| esm-vite-sb9-playwright | 9 | ESM | Vite | Playwright | npm |
+| esm-vite-sb9-pnpm | 9 | ESM | Vite | Selenium | pnpm |
+| esm-vite-sb9-yarn-pnp | 9 | ESM | Vite | Selenium | Yarn PnP |
+| esm-vite-sb10 | 10 | ESM | Vite | Selenium | npm |
+| playwright-esm-vite-sb9 | 9 | ESM | Vite | Playwright | npm |
+| playwright-esm-vite-sb10-react19 | 10 | ESM | Vite | Playwright | npm |
+| playwright-esm-vite-sb10-bun | 10 | ESM | Vite | Playwright | Bun |
