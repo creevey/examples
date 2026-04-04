@@ -25,23 +25,28 @@ jobs:
     runs-on: ubuntu-latest
     services:
       selenium-hub:
-        image: selenium/hub:4.18.1-20240220
+        image: selenium/hub:4.28.0-20250120
         ports:
           - 4444:4444
+          - 4442:4442
+          - 4443:4443
         options: >-
           --health-cmd "curl -f http://localhost:4444/wd/hub/status || exit 1"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
       selenium-node-chrome:
-        image: selenium/node-chrome:4.18.1-20240220
+        image: selenium/node-chrome:4.28.0-20250120
         env:
           SE_EVENT_BUS_HOST: selenium-hub
           SE_EVENT_BUS_PUBLISH_PORT: 4442
           SE_EVENT_BUS_SUBSCRIBE_PORT: 4443
-          HUB_HOST: selenium-hub
-          HUB_PORT: 4444
+          SE_NODE_MAX_SESSIONS: 4
+          SE_NODE_SESSION_TIMEOUT: 300
+          SCREEN_WIDTH: 1920
+          SCREEN_HEIGHT: 1080
         options: >-
+          --shm-size=2gb
           --health-cmd "curl -f http://localhost:5555/status || exit 1"
           --health-interval 10s
           --health-timeout 5s

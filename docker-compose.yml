@@ -1,44 +1,73 @@
 version: "3.8"
 services:
   selenium-hub:
-    image: selenium/hub:4.41.0-20260222
+    image: selenium/hub:4.28.0-20250120
+    platform: linux/amd64
     container_name: selenium-hub
+    hostname: selenium-hub
     ports:
       - "4444:4444"
+      - "4442:4442"
+      - "4443:4443"
     environment:
       - GRID_MAX_SESSION=16
       - GRID_TIMEOUT=30000
       - GRID_BROWSER_TIMEOUT=30000
+      - JAVA_OPTS=-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/selenium/logs
+    networks:
+      - selenium-grid
 
   chrome:
-    image: selenium/node-chrome:4.41.0-20260222
+    image: selenium/node-chrome:4.28.0-20250120
+    platform: linux/amd64
     shm_size: 2gb
+    privileged: true
     depends_on:
       - selenium-hub
     environment:
-      - HUB_HOST=selenium-hub
-      - HUB_PORT=4444
-      - NODE_MAX_INSTANCES=4
-      - NODE_MAX_SESSION=4
-      - SCREEN_WIDTH=1920
-      - SCREEN_HEIGHT=1080
-      - VNC_NO_PASSWORD=1
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+      - SE_NODE_MAX_SESSIONS=4
+      - SE_NODE_OVERRIDE_MAX_SESSIONS=false
+      - SE_NODE_SESSION_TIMEOUT=300
+      - SE_NODE_GRID_URL=http://localhost:4444
+      - SE_SCREEN_WIDTH=1920
+      - SE_SCREEN_HEIGHT=1080
+      - SE_VNC_NO_PASSWORD=1
+      - SE_OPTS=--log-level INFO
+      - JAVA_OPTS=-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/selenium/logs
     volumes:
       - /dev/shm:/dev/shm
     ports:
-      - "7900:7900"  # VNC port for debugging
+      - "7900:7900"
+    networks:
+      - selenium-grid
 
   firefox:
-    image: selenium/node-firefox:4.41.0-20260222
+    image: selenium/node-firefox:4.28.0-20250120
+    platform: linux/amd64
     shm_size: 2gb
+    privileged: true
     depends_on:
       - selenium-hub
     environment:
-      - HUB_HOST=selenium-hub
-      - HUB_PORT=4444
-      - NODE_MAX_INSTANCES=2
-      - NODE_MAX_SESSION=2
-      - SCREEN_WIDTH=1920
-      - SCREEN_HEIGHT=1080
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+      - SE_NODE_MAX_SESSIONS=2
+      - SE_NODE_OVERRIDE_MAX_SESSIONS=false
+      - SE_NODE_SESSION_TIMEOUT=300
+      - SE_NODE_GRID_URL=http://localhost:4444
+      - SE_SCREEN_WIDTH=1920
+      - SE_SCREEN_HEIGHT=1080
+      - SE_OPTS=--log-level INFO
+      - JAVA_OPTS=-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/selenium/logs
     volumes:
       - /dev/shm:/dev/shm
+    networks:
+      - selenium-grid
+
+networks:
+  selenium-grid:
+    driver: bridge

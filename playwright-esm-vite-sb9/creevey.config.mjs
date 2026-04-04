@@ -1,10 +1,10 @@
-import { CreeveyConfig, PlaywrightWebdriver } from "creevey";
+import { PlaywrightWebdriver } from "creevey/playwright";
 import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-/** @type {CreeveyConfig} */
+/** @type {import('creevey').CreeveyConfig} */
 const config = {
   testsDir: path.join(__dirname, "stories"),
   useDocker: true,
