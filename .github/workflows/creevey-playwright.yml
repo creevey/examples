@@ -110,7 +110,7 @@ jobs:
         working-directory: ${{ matrix.fixture }}
         env:
           STORYBOOK_URL: http://localhost:6006
-          NODE_OPTIONS: --dns-result-order=ipv4first
+          HOST: 127.0.0.1
         run: npm run creevey -- test
 
       # Run Creevey tests (Bun)
@@ -119,6 +119,7 @@ jobs:
         working-directory: ${{ matrix.fixture }}
         env:
           STORYBOOK_URL: http://localhost:6006
+          HOST: 127.0.0.1
         run: bun run creevey test
 
       - name: Upload test results
