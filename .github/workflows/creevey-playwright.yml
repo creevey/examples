@@ -107,13 +107,17 @@ jobs:
       - name: Run Creevey tests (Node)
         if: matrix.runtime == 'node'
         working-directory: ${{ matrix.fixture }}
-        run: npx creevey --debug
+        env:
+          STORYBOOK_URL: http://localhost:6006
+        run: npm run creevey -- --debug
 
       # Run Creevey tests (Bun)
       - name: Run Creevey tests (Bun)
         if: matrix.runtime == 'bun'
         working-directory: ${{ matrix.fixture }}
-        run: bunx creevey --debug
+        env:
+          STORYBOOK_URL: http://localhost:6006
+        run: bun run creevey -- --debug
 
       - name: Upload test results
         if: always()

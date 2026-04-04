@@ -106,13 +106,14 @@ jobs:
         working-directory: ${{ inputs.fixture }}
         env:
           SELENIUM_GRID_URL: http://localhost:4444/wd/hub
+          STORYBOOK_URL: http://localhost:6006
         run: |
           if [ "${{ inputs.package-manager }}" = "pnpm" ]; then
-            pnpm exec creevey --debug
+            pnpm run creevey --debug
           elif [ "${{ inputs.package-manager }}" = "yarn" ]; then
             yarn creevey --debug
           else
-            npx creevey --debug
+            npm run creevey -- --debug
           fi
 
       - name: Upload test results
