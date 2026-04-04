@@ -31,10 +31,6 @@ jobs:
             runtime: bun
 
     runs-on: ubuntu-latest
-    container:
-      image: mcr.microsoft.com/playwright:v1.59.1-noble
-      options: --ipc=host
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -75,6 +71,18 @@ jobs:
         if: matrix.runtime == 'bun'
         working-directory: ${{ matrix.fixture }}
         run: bun install
+
+      # Install Playwright browsers (Node)
+      - name: Install Playwright browsers (Node)
+        if: matrix.runtime == 'node'
+        working-directory: ${{ matrix.fixture }}
+        run: npx playwright install chromium
+
+      # Install Playwright browsers (Bun)
+      - name: Install Playwright browsers (Bun)
+        if: matrix.runtime == 'bun'
+        working-directory: ${{ matrix.fixture }}
+        run: bunx playwright install chromium
 
       # Build Storybook (Node)
       - name: Build Storybook (Node)
