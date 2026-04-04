@@ -44,7 +44,7 @@ jobs:
 
       - name: Install unzip for Bun setup
         if: matrix.runtime == 'bun'
-        run: apt-get update && apt-get install -y unzip
+        run: sudo apt-get update && sudo apt-get install -y unzip
 
       - name: Setup Bun
         if: matrix.runtime == 'bun'
