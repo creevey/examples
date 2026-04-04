@@ -109,6 +109,7 @@ jobs:
         working-directory: ${{ matrix.fixture }}
         env:
           STORYBOOK_URL: http://localhost:6006
+          NODE_OPTIONS: --dns-result-order=ipv4first
         run: npm run creevey -- test
 
       # Run Creevey tests (Bun)
