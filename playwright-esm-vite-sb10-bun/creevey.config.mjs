@@ -7,8 +7,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 /** @type {import('creevey').CreeveyConfig} */
 const config = {
   testsDir: path.join(__dirname, "stories"),
-  useDocker: true,
-  host: "0.0.0.0",
+  // Disable Docker in CI environments (GitHub Actions uses Playwright container with pre-installed browsers)
+  useDocker: !process.env.CI,
   webdriver: PlaywrightWebdriver,
   browsers: {
     chromium: {
