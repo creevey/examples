@@ -30,6 +30,10 @@ jobs:
           - 4444:4444
           - 4442:4442
           - 4443:4443
+        env:
+          GRID_MAX_SESSION: 16
+          GRID_TIMEOUT: 30000
+          GRID_BROWSER_TIMEOUT: 30000
         options: >-
           --health-cmd "curl -f http://localhost:4444/wd/hub/status || exit 1"
           --health-interval 10s
@@ -42,10 +46,13 @@ jobs:
           SE_EVENT_BUS_PUBLISH_PORT: 4442
           SE_EVENT_BUS_SUBSCRIBE_PORT: 4443
           SE_NODE_MAX_SESSIONS: 4
+          SE_NODE_OVERRIDE_MAX_SESSIONS: false
           SE_NODE_SESSION_TIMEOUT: 300
           SE_NODE_GRID_URL: http://localhost:4444
-          SCREEN_WIDTH: 1920
-          SCREEN_HEIGHT: 1080
+          SE_SCREEN_WIDTH: 1920
+          SE_SCREEN_HEIGHT: 1080
+          SE_VNC_NO_PASSWORD: 1
+          SE_OPTS: --log-level INFO
         options: >-
           --shm-size=2gb
           --health-cmd "curl -f http://localhost:5555/status || exit 1"
