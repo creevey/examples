@@ -31,7 +31,7 @@ jobs:
           - 4442:4442
           - 4443:4443
         env:
-          SE_OPTS: --grid-url http://localhost:4444/wd/hub
+          SE_GRID_URL: http://localhost:4444/wd/hub
         options: >-
           --health-cmd "curl -f http://localhost:4444/wd/hub/status || exit 1"
           --health-interval 10s
