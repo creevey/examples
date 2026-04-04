@@ -8,6 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const config = {
   testsDir: path.join(__dirname, "stories"),
   useDocker: true,
+  host: "0.0.0.0",
   webdriver: PlaywrightWebdriver,
   browsers: {
     chromium: {
