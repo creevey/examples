@@ -30,8 +30,6 @@ jobs:
           - 4444:4444
           - 4442:4442
           - 4443:4443
-        env:
-          SE_GRID_URL: http://localhost:4444/wd/hub
         options: >-
           --health-cmd "curl -f http://localhost:4444/wd/hub/status || exit 1"
           --health-interval 10s
@@ -45,6 +43,7 @@ jobs:
           SE_EVENT_BUS_SUBSCRIBE_PORT: 4443
           SE_NODE_MAX_SESSIONS: 4
           SE_NODE_SESSION_TIMEOUT: 300
+          SE_NODE_GRID_URL: http://localhost:4444
           SCREEN_WIDTH: 1920
           SCREEN_HEIGHT: 1080
         options: >-
