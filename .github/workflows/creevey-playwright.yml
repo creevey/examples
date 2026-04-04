@@ -72,18 +72,6 @@ jobs:
         working-directory: ${{ matrix.fixture }}
         run: bun install
 
-      # Install Playwright browsers (Node)
-      - name: Install Playwright browsers (Node)
-        if: matrix.runtime == 'node'
-        working-directory: ${{ matrix.fixture }}
-        run: npx playwright install chromium
-
-      # Install Playwright browsers (Bun)
-      - name: Install Playwright browsers (Bun)
-        if: matrix.runtime == 'bun'
-        working-directory: ${{ matrix.fixture }}
-        run: bunx playwright install chromium
-
       # Build Storybook (Node)
       - name: Build Storybook (Node)
         if: matrix.runtime == 'node'
@@ -118,7 +106,6 @@ jobs:
         working-directory: ${{ matrix.fixture }}
         env:
           STORYBOOK_URL: http://localhost:6006
-          DOCKER: "true"
         run: npm run creevey -- test
 
       # Run Creevey tests (Bun)
@@ -127,7 +114,6 @@ jobs:
         working-directory: ${{ matrix.fixture }}
         env:
           STORYBOOK_URL: http://localhost:6006
-          DOCKER: "true"
         run: bun run creevey test
 
       - name: Upload test results
