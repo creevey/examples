@@ -109,11 +109,11 @@ jobs:
           STORYBOOK_URL: http://localhost:6006
         run: |
           if [ "${{ inputs.package-manager }}" = "pnpm" ]; then
-            pnpm run creevey --debug
+            pnpm run creevey test
           elif [ "${{ inputs.package-manager }}" = "yarn" ]; then
-            yarn creevey --debug
+            yarn creevey test
           else
-            npm run creevey -- --debug
+            npm run creevey -- test
           fi
 
       - name: Upload test results
