@@ -10,9 +10,8 @@
   "scripts": {
     "storybook": "storybook dev --ci -p 6006",
     "build-storybook": "storybook build",
-    "creevey": "creevey",
-    "creevey:ui": "creevey --ui",
-    "creevey:update": "creevey --update"
+    "creevey": "creevey test",
+    "creevey:ui": "creevey test --ui"
   },
   "devDependencies": {
     "@storybook/addon-essentials": "^8.6.0",

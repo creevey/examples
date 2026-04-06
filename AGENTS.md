@@ -87,7 +87,6 @@ npm run storybook
 # Run Creevey tests
 npm run creevey           # Run all tests
 npm run creevey:ui        # Run with UI mode
-npm run creevey:update    # Update baselines
 ```
 
 ### Local Verification Scripts
