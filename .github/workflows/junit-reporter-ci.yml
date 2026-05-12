@@ -6,6 +6,9 @@ on:
 permissions:
   contents: read
 
+env:
+  NPM_VERSION: 10.9.7
+
 jobs:
   selenium-junit:
     name: Selenium JUnit (${{ matrix.scenario }})
@@ -67,7 +70,7 @@ jobs:
         run: corepack enable
 
       - name: Prepare npm
-        run: corepack prepare npm@10.9.7 --activate
+        run: corepack prepare npm@${{ env.NPM_VERSION }} --activate
 
       - name: Install dependencies
         working-directory: ${{ env.FIXTURE }}
@@ -179,7 +182,7 @@ jobs:
         run: corepack enable
 
       - name: Prepare npm
-        run: corepack prepare npm@10.9.7 --activate
+        run: corepack prepare npm@${{ env.NPM_VERSION }} --activate
 
       - name: Install dependencies
         working-directory: ${{ env.FIXTURE }}

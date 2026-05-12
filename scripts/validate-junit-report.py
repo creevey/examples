@@ -6,7 +6,10 @@ from pathlib import Path
 def get_required_env(name):
     value = os.environ.get(name)
     if not value:
-        raise SystemExit(f"Missing required environment variable: {name}")
+        raise SystemExit(
+            f"Missing required environment variable: {name}. "
+            "Set it in the GitHub Actions step env block before running this helper."
+        )
     return value
 
 
