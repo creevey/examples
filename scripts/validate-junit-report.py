@@ -14,9 +14,14 @@ def get_required_env(name):
 
 
 scenario = get_required_env("SCENARIO")
-exit_code = int(get_required_env("EXIT_CODE"))
+exit_code_raw = get_required_env("EXIT_CODE")
 junit_xml = Path(get_required_env("JUNIT_XML"))
 summary_label = get_required_env("SUMMARY_LABEL")
+
+try:
+    exit_code = int(exit_code_raw)
+except ValueError as exc:
+    raise SystemExit(f"EXIT_CODE must be a numeric value, got: {exit_code_raw}") from exc
 
 if not junit_xml.exists():
     raise SystemExit(f"JUnit XML not found: {junit_xml}")
