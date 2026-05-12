@@ -9,3 +9,4 @@ storybook-static
 # Selenium Grid
 .docker/
 *.log
+__pycache__/
