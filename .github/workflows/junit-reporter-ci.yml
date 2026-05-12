@@ -49,8 +49,8 @@ jobs:
           --health-retries 5
     env:
       FIXTURE: esm-vite-sb9
-      JUNIT_REPORT_DIR: /home/runner/work/examples/examples/esm-vite-sb9/report/junit-ci/${{ matrix.scenario }}
-      JUNIT_XML: /home/runner/work/examples/examples/esm-vite-sb9/report/junit-ci/${{ matrix.scenario }}/junit.xml
+      JUNIT_REPORT_DIR: ${{ github.workspace }}/esm-vite-sb9/report/junit-ci/${{ matrix.scenario }}
+      JUNIT_XML: ${{ github.workspace }}/esm-vite-sb9/report/junit-ci/${{ matrix.scenario }}/junit.xml
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -221,8 +221,8 @@ jobs:
         scenario: [pass, fail]
     env:
       FIXTURE: playwright-esm-vite-sb9
-      JUNIT_REPORT_DIR: /home/runner/work/examples/examples/playwright-esm-vite-sb9/report/junit-ci/${{ matrix.scenario }}
-      JUNIT_XML: /home/runner/work/examples/examples/playwright-esm-vite-sb9/report/junit-ci/${{ matrix.scenario }}/junit.xml
+      JUNIT_REPORT_DIR: ${{ github.workspace }}/playwright-esm-vite-sb9/report/junit-ci/${{ matrix.scenario }}
+      JUNIT_XML: ${{ github.workspace }}/playwright-esm-vite-sb9/report/junit-ci/${{ matrix.scenario }}/junit.xml
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
