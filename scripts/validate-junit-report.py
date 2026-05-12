@@ -71,4 +71,5 @@ if summary_path:
     with open(summary_path, "a", encoding="utf-8") as summary:
         summary.write(summary_text)
 else:
+    print("GITHUB_STEP_SUMMARY is not set; writing JUnit validation summary to stdout.")
     print(summary_text, end="")
