@@ -25,6 +25,7 @@ This document describes the migration from GitLab CI to GitHub Actions for Creev
 ├── creevey-playwright.yml   # Playwright Docker tests
 ├── creevey-bun.yml          # Bun runtime tests
 ├── creevey-tests.yml        # Unified test runner
+├── junit-reporter-ci.yml    # Dedicated JUnit reporter validation
 └── test-results.yml         # PR comment automation
 ```
 
@@ -79,6 +80,12 @@ Select test type:
 Test reports are saved as artifacts for 7 days with the naming pattern:
 ```
 creevey-report-{fixture-name}
+```
+
+JUnit reporter validation additionally uploads scenario-specific XML and report artifacts:
+```
+junit-xml-{driver}-{scenario}
+junit-report-{driver}-{scenario}
 ```
 
 Access artifacts from:

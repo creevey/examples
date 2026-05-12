@@ -1,0 +1,384 @@
+name: JUnit Reporter CI Validation
+
+on:
+  workflow_dispatch:
+
+jobs:
+  selenium-junit:
+    name: Selenium JUnit (${{ matrix.scenario }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        scenario: [pass, fail]
+    services:
+      selenium-hub:
+        image: selenium/hub:4.28.0-20250120
+        ports:
+          - 4444:4444
+          - 4442:4442
+          - 4443:4443
+        env:
+          GRID_MAX_SESSION: 16
+          GRID_TIMEOUT: 30000
+          GRID_BROWSER_TIMEOUT: 30000
+        options: >-
+          --health-cmd "curl -f http://localhost:4444/wd/hub/status || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      selenium-node-chrome:
+        image: selenium/node-chrome:4.28.0-20250120
+        env:
+          SE_EVENT_BUS_HOST: selenium-hub
+          SE_EVENT_BUS_PUBLISH_PORT: 4442
+          SE_EVENT_BUS_SUBSCRIBE_PORT: 4443
+          SE_NODE_MAX_SESSIONS: 4
+          SE_NODE_OVERRIDE_MAX_SESSIONS: false
+          SE_NODE_SESSION_TIMEOUT: 300
+          SE_NODE_GRID_URL: http://localhost:4444
+          SE_SCREEN_WIDTH: 1920
+          SE_SCREEN_HEIGHT: 1080
+          SE_VNC_NO_PASSWORD: 1
+          SE_OPTS: --log-level INFO
+        options: >-
+          --shm-size=2gb
+          --health-cmd "curl -f http://localhost:5555/status || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      FIXTURE: esm-vite-sb9
+      JUNIT_REPORT_DIR: /home/runner/work/examples/examples/esm-vite-sb9/report/junit-ci/${{ matrix.scenario }}
+      JUNIT_XML: /home/runner/work/examples/examples/esm-vite-sb9/report/junit-ci/${{ matrix.scenario }}/junit.xml
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Prepare npm
+        run: corepack prepare npm@10.9.7 --activate
+
+      - name: Install dependencies
+        working-directory: ${{ env.FIXTURE }}
+        run: npm install
+
+      - name: Create JUnit config override
+        working-directory: ${{ env.FIXTURE }}
+        run: |
+          cat <<'EOF' > creevey.junit.config.mjs
+          import baseConfig from "./creevey.config.mjs";
+
+          export default {
+            ...baseConfig,
+            reportDir: process.env.CREEVEY_REPORT_DIR,
+            reporter: "junit",
+            reporterOptions: {
+              ...(baseConfig.reporterOptions ?? {}),
+              outputFile: process.env.CREEVEY_JUNIT_OUTPUT,
+            },
+          };
+          EOF
+
+      - name: Introduce expected screenshot mismatch
+        if: matrix.scenario == 'fail'
+        working-directory: ${{ env.FIXTURE }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("stories/Button.stories.js")
+          content = path.read_text()
+          original = 'label: "Button",'
+          updated = 'label: "Button FAIL",'
+          if original not in content:
+            raise SystemExit("Unable to locate the Primary story label")
+          path.write_text(content.replace(original, updated, 1))
+          PY
+
+      - name: Build Storybook
+        working-directory: ${{ env.FIXTURE }}
+        run: npm run build-storybook
+
+      - name: Start Storybook server
+        working-directory: ${{ env.FIXTURE }}
+        run: |
+          npx http-server ./storybook-static -p 6006 -s &
+          npx wait-on http://localhost:6006 --timeout 30000
+
+      - name: Run Creevey with JUnit reporter
+        id: creevey
+        working-directory: ${{ env.FIXTURE }}
+        env:
+          CREEVEY_JUNIT_OUTPUT: ${{ env.JUNIT_XML }}
+          CREEVEY_REPORT_DIR: ${{ env.JUNIT_REPORT_DIR }}
+          SELENIUM_GRID_URL: http://localhost:4444/wd/hub
+          STORYBOOK_URL: http://localhost:6006
+        run: |
+          set +e
+          npx creevey test --config ./creevey.junit.config.mjs
+          exit_code=$?
+          echo "exit_code=${exit_code}" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Assert JUnit XML
+        env:
+          EXIT_CODE: ${{ steps.creevey.outputs.exit_code }}
+          SCENARIO: ${{ matrix.scenario }}
+          JUNIT_XML: ${{ env.JUNIT_XML }}
+        run: |
+          python - <<'PY'
+          import os
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+
+          scenario = os.environ["SCENARIO"]
+          exit_code = int(os.environ["EXIT_CODE"])
+          junit_xml = Path(os.environ["JUNIT_XML"])
+
+          if not junit_xml.exists():
+            raise SystemExit(f"JUnit XML not found: {junit_xml}")
+          if junit_xml.stat().st_size == 0:
+            raise SystemExit(f"JUnit XML is empty: {junit_xml}")
+
+          root = ET.parse(junit_xml).getroot()
+          if root.tag != "testsuites":
+            raise SystemExit(f"Unexpected root element: {root.tag}")
+
+          suites = root.findall("testsuite")
+          cases = root.findall(".//testcase")
+          failures = root.findall(".//failure")
+          errors = root.findall(".//error")
+          browser_properties = root.findall(".//testsuite/properties/property[@name='browser']")
+
+          if not suites:
+            raise SystemExit("JUnit XML does not contain any testsuite elements")
+          if not cases:
+            raise SystemExit("JUnit XML does not contain any testcase elements")
+          if not browser_properties:
+            raise SystemExit("JUnit XML does not include browser properties")
+
+          suite_failures = sum(int(suite.attrib.get("failures", "0")) for suite in suites)
+          suite_errors = sum(int(suite.attrib.get("errors", "0")) for suite in suites)
+          total_problems = suite_failures + suite_errors
+
+          if scenario == "pass":
+            if exit_code != 0:
+              raise SystemExit(f"Expected a zero exit code for a passing run, got {exit_code}")
+            if total_problems != 0:
+              raise SystemExit(f"Expected no failures/errors for a passing run, got {total_problems}")
+            if failures or errors:
+              raise SystemExit("Expected no failure/error elements for a passing run")
+          else:
+            if exit_code == 0:
+              raise SystemExit("Expected a non-zero exit code for a failing run")
+            if total_problems == 0:
+              raise SystemExit("Expected at least one failure/error in the JUnit XML for a failing run")
+            if not failures and not errors:
+              raise SystemExit("Expected failure or error elements in the failing JUnit XML")
+
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
+            summary.write(
+              f"### Selenium JUnit ({scenario})\n"
+              f"- XML: `{junit_xml}`\n"
+              f"- Exit code: `{exit_code}`\n"
+              f"- Testsuites: `{len(suites)}`\n"
+              f"- Testcases: `{len(cases)}`\n"
+              f"- Failures: `{suite_failures}`\n"
+              f"- Errors: `{suite_errors}`\n\n"
+            )
+          PY
+
+      - name: Upload JUnit XML artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-xml-selenium-${{ matrix.scenario }}
+          path: ${{ env.JUNIT_XML }}
+          retention-days: 7
+
+      - name: Upload JUnit report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-report-selenium-${{ matrix.scenario }}
+          path: ${{ env.JUNIT_REPORT_DIR }}
+          retention-days: 7
+
+  playwright-junit:
+    name: Playwright JUnit (${{ matrix.scenario }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        scenario: [pass, fail]
+    env:
+      FIXTURE: playwright-esm-vite-sb9
+      JUNIT_REPORT_DIR: /home/runner/work/examples/examples/playwright-esm-vite-sb9/report/junit-ci/${{ matrix.scenario }}
+      JUNIT_XML: /home/runner/work/examples/examples/playwright-esm-vite-sb9/report/junit-ci/${{ matrix.scenario }}/junit.xml
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Prepare npm
+        run: corepack prepare npm@10.9.7 --activate
+
+      - name: Install dependencies
+        working-directory: ${{ env.FIXTURE }}
+        run: npm install
+
+      - name: Create JUnit config override
+        working-directory: ${{ env.FIXTURE }}
+        run: |
+          cat <<'EOF' > creevey.junit.config.mjs
+          import baseConfig from "./creevey.config.mjs";
+
+          export default {
+            ...baseConfig,
+            reportDir: process.env.CREEVEY_REPORT_DIR,
+            reporter: "junit",
+            reporterOptions: {
+              ...(baseConfig.reporterOptions ?? {}),
+              outputFile: process.env.CREEVEY_JUNIT_OUTPUT,
+            },
+          };
+          EOF
+
+      - name: Introduce expected screenshot mismatch
+        if: matrix.scenario == 'fail'
+        working-directory: ${{ env.FIXTURE }}
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("stories/Button.stories.js")
+          content = path.read_text()
+          original = 'label: "Button",'
+          updated = 'label: "Button FAIL",'
+          if original not in content:
+            raise SystemExit("Unable to locate the Primary story label")
+          path.write_text(content.replace(original, updated, 1))
+          PY
+
+      - name: Build Storybook
+        working-directory: ${{ env.FIXTURE }}
+        run: npm run build-storybook
+
+      - name: Start Storybook server
+        working-directory: ${{ env.FIXTURE }}
+        run: |
+          npx http-server ./storybook-static -p 6006 -s &
+          npx wait-on http://localhost:6006 --timeout 30000
+
+      - name: Run Creevey with JUnit reporter
+        id: creevey
+        working-directory: ${{ env.FIXTURE }}
+        env:
+          CREEVEY_JUNIT_OUTPUT: ${{ env.JUNIT_XML }}
+          CREEVEY_REPORT_DIR: ${{ env.JUNIT_REPORT_DIR }}
+          STORYBOOK_URL: http://localhost:6006
+        run: |
+          set +e
+          npx creevey test --config ./creevey.junit.config.mjs
+          exit_code=$?
+          echo "exit_code=${exit_code}" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Assert JUnit XML
+        env:
+          EXIT_CODE: ${{ steps.creevey.outputs.exit_code }}
+          SCENARIO: ${{ matrix.scenario }}
+          JUNIT_XML: ${{ env.JUNIT_XML }}
+        run: |
+          python - <<'PY'
+          import os
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+
+          scenario = os.environ["SCENARIO"]
+          exit_code = int(os.environ["EXIT_CODE"])
+          junit_xml = Path(os.environ["JUNIT_XML"])
+
+          if not junit_xml.exists():
+            raise SystemExit(f"JUnit XML not found: {junit_xml}")
+          if junit_xml.stat().st_size == 0:
+            raise SystemExit(f"JUnit XML is empty: {junit_xml}")
+
+          root = ET.parse(junit_xml).getroot()
+          if root.tag != "testsuites":
+            raise SystemExit(f"Unexpected root element: {root.tag}")
+
+          suites = root.findall("testsuite")
+          cases = root.findall(".//testcase")
+          failures = root.findall(".//failure")
+          errors = root.findall(".//error")
+          browser_properties = root.findall(".//testsuite/properties/property[@name='browser']")
+
+          if not suites:
+            raise SystemExit("JUnit XML does not contain any testsuite elements")
+          if not cases:
+            raise SystemExit("JUnit XML does not contain any testcase elements")
+          if not browser_properties:
+            raise SystemExit("JUnit XML does not include browser properties")
+
+          suite_failures = sum(int(suite.attrib.get("failures", "0")) for suite in suites)
+          suite_errors = sum(int(suite.attrib.get("errors", "0")) for suite in suites)
+          total_problems = suite_failures + suite_errors
+
+          if scenario == "pass":
+            if exit_code != 0:
+              raise SystemExit(f"Expected a zero exit code for a passing run, got {exit_code}")
+            if total_problems != 0:
+              raise SystemExit(f"Expected no failures/errors for a passing run, got {total_problems}")
+            if failures or errors:
+              raise SystemExit("Expected no failure/error elements for a passing run")
+          else:
+            if exit_code == 0:
+              raise SystemExit("Expected a non-zero exit code for a failing run")
+            if total_problems == 0:
+              raise SystemExit("Expected at least one failure/error in the JUnit XML for a failing run")
+            if not failures and not errors:
+              raise SystemExit("Expected failure or error elements in the failing JUnit XML")
+
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
+            summary.write(
+              f"### Playwright JUnit ({scenario})\n"
+              f"- XML: `{junit_xml}`\n"
+              f"- Exit code: `{exit_code}`\n"
+              f"- Testsuites: `{len(suites)}`\n"
+              f"- Testcases: `{len(cases)}`\n"
+              f"- Failures: `{suite_failures}`\n"
+              f"- Errors: `{suite_errors}`\n\n"
+            )
+          PY
+
+      - name: Upload JUnit XML artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-xml-playwright-${{ matrix.scenario }}
+          path: ${{ env.JUNIT_XML }}
+          retention-days: 7
+
+      - name: Upload JUnit report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-report-playwright-${{ matrix.scenario }}
+          path: ${{ env.JUNIT_REPORT_DIR }}
+          retention-days: 7

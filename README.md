@@ -107,12 +107,14 @@ GitHub Actions workflows cover all 13 project variants:
 - **Selenium Grid tests** (`creevey-selenium.yml`) - 9 projects using Selenium WebDriver
 - **Playwright Docker tests** (`creevey-playwright.yml`) - 2 projects using Playwright
 - **Bun runtime tests** (`creevey-bun.yml`) - 1 project using Bun runtime
+- **JUnit reporter validation** (`junit-reporter-ci.yml`) - dedicated real-CI pass/fail checks for Selenium and Playwright
 
 **Features:**
 - Automatic testing on push/PR to main/master
 - Manual workflow dispatch with test type selection
 - Matrix strategy for parallel execution
 - Test artifacts uploaded for 7 days
+- Dedicated JUnit XML artifact validation in GitHub Actions
 - PR comments with test results
 
 See [docs/CI-MIGRATION.md](docs/CI-MIGRATION.md) for migration details from GitLab CI.
