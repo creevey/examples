@@ -6,265 +6,44 @@ on:
 permissions:
   contents: read
 
-env:
-  NPM_VERSION: 10.9.7
-
 jobs:
   selenium-junit:
     name: Selenium JUnit (${{ matrix.scenario }})
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         scenario: [pass, fail]
-    services:
-      selenium-hub:
-        image: selenium/hub:4.28.0-20250120
-        ports:
-          - 4444:4444
-          - 4442:4442
-          - 4443:4443
-        env:
-          GRID_MAX_SESSION: 16
-          GRID_TIMEOUT: 30000
-          GRID_BROWSER_TIMEOUT: 30000
-        options: >-
-          --health-cmd "curl -f http://localhost:4444/wd/hub/status || exit 1"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-      selenium-node-chrome:
-        image: selenium/node-chrome:4.28.0-20250120
-        env:
-          SE_EVENT_BUS_HOST: selenium-hub
-          SE_EVENT_BUS_PUBLISH_PORT: 4442
-          SE_EVENT_BUS_SUBSCRIBE_PORT: 4443
-          SE_NODE_MAX_SESSIONS: 4
-          SE_NODE_OVERRIDE_MAX_SESSIONS: false
-          SE_NODE_SESSION_TIMEOUT: 300
-          SE_NODE_GRID_URL: http://localhost:4444
-          SE_SCREEN_WIDTH: 1920
-          SE_SCREEN_HEIGHT: 1080
-          SE_VNC_NO_PASSWORD: 1
-          SE_OPTS: --log-level INFO
-        options: >-
-          --shm-size=2gb
-          --health-cmd "curl -f http://localhost:5555/status || exit 1"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-    env:
-      FIXTURE: esm-vite-sb9
-      JUNIT_REPORT_DIR: ${{ github.workspace }}/esm-vite-sb9/report/junit-ci/${{ matrix.scenario }}
-      JUNIT_XML: ${{ github.workspace }}/esm-vite-sb9/report/junit-ci/${{ matrix.scenario }}/junit.xml
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Prepare npm
-        run: corepack prepare npm@${{ env.NPM_VERSION }} --activate
-
-      - name: Install dependencies
-        working-directory: ${{ env.FIXTURE }}
-        run: npm install
-
-      - name: Create JUnit config override
-        working-directory: ${{ env.FIXTURE }}
-        run: |
-          cat <<'EOF' > creevey.junit.config.mjs
-          import baseConfig from "./creevey.config.mjs";
-
-          export default {
-            ...baseConfig,
-            reportDir: process.env.CREEVEY_REPORT_DIR,
-            reporter: "junit",
-            reporterOptions: {
-              ...(baseConfig.reporterOptions ?? {}),
-              outputFile: process.env.CREEVEY_JUNIT_OUTPUT,
-            },
-          };
-          EOF
-
-      - name: Introduce expected screenshot mismatch
-        if: matrix.scenario == 'fail'
-        working-directory: ${{ env.FIXTURE }}
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          path = Path("stories/Button.stories.js")
-          content = path.read_text()
-          original = 'label: "Button",'
-          updated = 'label: "Button FAIL",'
-          if original not in content:
-            raise SystemExit("Unable to locate the Primary story label")
-          path.write_text(content.replace(original, updated, 1))
-          PY
-
-      - name: Build Storybook
-        working-directory: ${{ env.FIXTURE }}
-        run: npm run build-storybook
-
-      - name: Start Storybook server
-        working-directory: ${{ env.FIXTURE }}
-        run: |
-          npx http-server ./storybook-static -p 6006 -s &
-          npx wait-on http://localhost:6006 --timeout 30000
-
-      - name: Run Creevey with JUnit reporter
-        id: creevey
-        working-directory: ${{ env.FIXTURE }}
-        env:
-          CREEVEY_JUNIT_OUTPUT: ${{ env.JUNIT_XML }}
-          CREEVEY_REPORT_DIR: ${{ env.JUNIT_REPORT_DIR }}
-          SELENIUM_GRID_URL: http://localhost:4444/wd/hub
-          STORYBOOK_URL: http://localhost:6006
-        run: |
-          set +e
-          npx creevey test --config ./creevey.junit.config.mjs
-          exit_code=$?
-          echo "exit_code=${exit_code}" >> "$GITHUB_OUTPUT"
-          exit 0
-
-      - name: Assert JUnit XML
-        env:
-          EXIT_CODE: ${{ steps.creevey.outputs.exit_code }}
-          SCENARIO: ${{ matrix.scenario }}
-          SUMMARY_LABEL: Selenium JUnit
-          JUNIT_XML: ${{ env.JUNIT_XML }}
-        run: python ${{ github.workspace }}/scripts/validate-junit-report.py
-
-      - name: Upload JUnit XML artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: junit-xml-selenium-${{ matrix.scenario }}
-          path: ${{ env.JUNIT_XML }}
-          retention-days: 7
-
-      - name: Upload JUnit report artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: junit-report-selenium-${{ matrix.scenario }}
-          path: ${{ env.JUNIT_REPORT_DIR }}
-          retention-days: 7
+    uses: ./.github/workflows/selenium-template.yml
+    with:
+      fixture: esm-vite-sb9
+      node-version: '22'
+      package-manager: npm
+      package-manager-version: '10.9.7'
+      creevey-extra-args: --reporter junit --report-dir report/junit-ci/${{ matrix.scenario }}
+      creevey-report-dir: report/junit-ci/${{ matrix.scenario }}
+      capture-creevey-exit-code: true
+      junit-scenario: ${{ matrix.scenario }}
+      junit-summary-label: Selenium JUnit
+      inject-button-mismatch: ${{ matrix.scenario == 'fail' }}
+      artifact-suffix: selenium-${{ matrix.scenario }}
 
   playwright-junit:
     name: Playwright JUnit (${{ matrix.scenario }})
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         scenario: [pass, fail]
-    env:
-      FIXTURE: playwright-esm-vite-sb9
-      JUNIT_REPORT_DIR: ${{ github.workspace }}/playwright-esm-vite-sb9/report/junit-ci/${{ matrix.scenario }}
-      JUNIT_XML: ${{ github.workspace }}/playwright-esm-vite-sb9/report/junit-ci/${{ matrix.scenario }}/junit.xml
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Prepare npm
-        run: corepack prepare npm@${{ env.NPM_VERSION }} --activate
-
-      - name: Install dependencies
-        working-directory: ${{ env.FIXTURE }}
-        run: npm install
-
-      - name: Create JUnit config override
-        working-directory: ${{ env.FIXTURE }}
-        run: |
-          cat <<'EOF' > creevey.junit.config.mjs
-          import baseConfig from "./creevey.config.mjs";
-
-          export default {
-            ...baseConfig,
-            reportDir: process.env.CREEVEY_REPORT_DIR,
-            reporter: "junit",
-            reporterOptions: {
-              ...(baseConfig.reporterOptions ?? {}),
-              outputFile: process.env.CREEVEY_JUNIT_OUTPUT,
-            },
-          };
-          EOF
-
-      - name: Introduce expected screenshot mismatch
-        if: matrix.scenario == 'fail'
-        working-directory: ${{ env.FIXTURE }}
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          path = Path("stories/Button.stories.js")
-          content = path.read_text()
-          original = 'label: "Button",'
-          updated = 'label: "Button FAIL",'
-          if original not in content:
-            raise SystemExit("Unable to locate the Primary story label")
-          path.write_text(content.replace(original, updated, 1))
-          PY
-
-      - name: Build Storybook
-        working-directory: ${{ env.FIXTURE }}
-        run: npm run build-storybook
-
-      - name: Start Storybook server
-        working-directory: ${{ env.FIXTURE }}
-        run: |
-          npx http-server ./storybook-static -p 6006 -s &
-          npx wait-on http://localhost:6006 --timeout 30000
-
-      - name: Run Creevey with JUnit reporter
-        id: creevey
-        working-directory: ${{ env.FIXTURE }}
-        env:
-          CREEVEY_JUNIT_OUTPUT: ${{ env.JUNIT_XML }}
-          CREEVEY_REPORT_DIR: ${{ env.JUNIT_REPORT_DIR }}
-          STORYBOOK_URL: http://localhost:6006
-        run: |
-          set +e
-          npx creevey test --config ./creevey.junit.config.mjs
-          exit_code=$?
-          echo "exit_code=${exit_code}" >> "$GITHUB_OUTPUT"
-          exit 0
-
-      - name: Assert JUnit XML
-        env:
-          EXIT_CODE: ${{ steps.creevey.outputs.exit_code }}
-          SCENARIO: ${{ matrix.scenario }}
-          SUMMARY_LABEL: Playwright JUnit
-          JUNIT_XML: ${{ env.JUNIT_XML }}
-        run: python ${{ github.workspace }}/scripts/validate-junit-report.py
-
-      - name: Upload JUnit XML artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: junit-xml-playwright-${{ matrix.scenario }}
-          path: ${{ env.JUNIT_XML }}
-          retention-days: 7
-
-      - name: Upload JUnit report artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: junit-report-playwright-${{ matrix.scenario }}
-          path: ${{ env.JUNIT_REPORT_DIR }}
-          retention-days: 7
+    uses: ./.github/workflows/playwright-template.yml
+    with:
+      fixture: playwright-esm-vite-sb9
+      runtime: node
+      node-version: '22'
+      package-manager: npm
+      package-manager-version: '10.9.7'
+      creevey-extra-args: --reporter junit --report-dir report/junit-ci/${{ matrix.scenario }}
+      creevey-report-dir: report/junit-ci/${{ matrix.scenario }}
+      capture-creevey-exit-code: true
+      junit-scenario: ${{ matrix.scenario }}
+      junit-summary-label: Playwright JUnit
+      inject-button-mismatch: ${{ matrix.scenario == 'fail' }}
+      artifact-suffix: playwright-${{ matrix.scenario }}

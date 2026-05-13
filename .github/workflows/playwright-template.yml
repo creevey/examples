@@ -1,4 +1,4 @@
-name: Selenium Test Template
+name: Playwright Test Template
 
 on:
   workflow_call:
@@ -7,18 +7,27 @@ on:
         required: true
         type: string
         description: 'Project directory name'
+      runtime:
+        required: true
+        type: string
+        description: 'Runtime (node or bun)'
       node-version:
-        required: true
+        required: false
         type: string
-        description: 'Node.js version (20, 22, or 24)'
+        description: 'Node.js version'
       package-manager:
-        required: true
+        required: false
         type: string
-        description: 'Package manager (npm, pnpm, yarn)'
+        default: npm
+        description: 'Package manager for Node.js runs'
       package-manager-version:
         required: false
         type: string
-        description: 'Package manager version (e.g., 10.9.7, 9.15.9, 4.13.0)'
+        description: 'Package manager version for Node.js runs'
+      bun-version:
+        required: false
+        type: string
+        description: 'Bun version'
       creevey-extra-args:
         required: false
         type: string
@@ -58,75 +67,43 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    services:
-      selenium-hub:
-        image: selenium/hub:4.28.0-20250120
-        ports:
-          - 4444:4444
-          - 4442:4442
-          - 4443:4443
-        env:
-          GRID_MAX_SESSION: 16
-          GRID_TIMEOUT: 30000
-          GRID_BROWSER_TIMEOUT: 30000
-        options: >-
-          --health-cmd "curl -f http://localhost:4444/wd/hub/status || exit 1"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-      selenium-node-chrome:
-        image: selenium/node-chrome:4.28.0-20250120
-        env:
-          SE_EVENT_BUS_HOST: selenium-hub
-          SE_EVENT_BUS_PUBLISH_PORT: 4442
-          SE_EVENT_BUS_SUBSCRIBE_PORT: 4443
-          SE_NODE_MAX_SESSIONS: 4
-          SE_NODE_OVERRIDE_MAX_SESSIONS: false
-          SE_NODE_SESSION_TIMEOUT: 300
-          SE_NODE_GRID_URL: http://localhost:4444
-          SE_SCREEN_WIDTH: 1920
-          SE_SCREEN_HEIGHT: 1080
-          SE_VNC_NO_PASSWORD: 1
-          SE_OPTS: --log-level INFO
-        options: >-
-          --shm-size=2gb
-          --health-cmd "curl -f http://localhost:5555/status || exit 1"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup Node.js
+        if: inputs.runtime == 'node'
         uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node-version }}
 
-      - name: Enable Corepack
+      - name: Install unzip for Bun setup
+        if: inputs.runtime == 'bun'
+        run: sudo apt-get update && sudo apt-get install -y unzip
+
+      - name: Setup Bun
+        if: inputs.runtime == 'bun'
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ inputs.bun-version }}
+
+      - name: Enable Corepack (Node)
+        if: inputs.runtime == 'node'
         run: corepack enable
 
-      - name: Prepare package manager
-        run: |
-          if [ "${{ inputs.package-manager }}" = "pnpm" ]; then
-            corepack prepare pnpm@${{ inputs.package-manager-version }} --activate
-          elif [ "${{ inputs.package-manager }}" = "yarn" ]; then
-            corepack prepare yarn@${{ inputs.package-manager-version }} --activate
-          elif [ "${{ inputs.package-manager }}" = "npm" ] && [ -n "${{ inputs.package-manager-version }}" ]; then
-            corepack prepare npm@${{ inputs.package-manager-version }} --activate
-          fi
+      - name: Prepare package manager (Node)
+        if: inputs.runtime == 'node'
+        run: corepack prepare ${{ inputs.package-manager }}@${{ inputs.package-manager-version }} --activate
 
-      - name: Install dependencies
+      - name: Install dependencies (Node)
+        if: inputs.runtime == 'node'
         working-directory: ${{ inputs.fixture }}
-        run: |
-          if [ "${{ inputs.package-manager }}" = "pnpm" ]; then
-            pnpm install
-          elif [ "${{ inputs.package-manager }}" = "yarn" ]; then
-            yarn install
-          else
-            npm install
-          fi
+        run: npm install
+
+      - name: Install dependencies (Bun)
+        if: inputs.runtime == 'bun'
+        working-directory: ${{ inputs.fixture }}
+        run: bun install
 
       - name: Compute artifact paths
         id: paths
@@ -160,56 +137,72 @@ jobs:
           path.write_text(content.replace(original, updated, 1))
           PY
 
-      - name: Build Storybook
+      - name: Build Storybook (Node)
+        if: inputs.runtime == 'node'
         working-directory: ${{ inputs.fixture }}
-        run: |
-          if [ "${{ inputs.package-manager }}" = "pnpm" ]; then
-            pnpm run build-storybook
-          elif [ "${{ inputs.package-manager }}" = "yarn" ]; then
-            yarn build-storybook
-          else
-            npm run build-storybook
-          fi
+        run: npm run build-storybook
 
-      - name: Start Storybook server
+      - name: Build Storybook (Bun)
+        if: inputs.runtime == 'bun'
+        working-directory: ${{ inputs.fixture }}
+        run: bun run build-storybook
+
+      - name: Start Storybook server (Node)
+        if: inputs.runtime == 'node'
         working-directory: ${{ inputs.fixture }}
         run: |
           npx http-server ./storybook-static -p 6006 -s &
           npx wait-on http://localhost:6006 --timeout 30000
 
-      - name: Run Creevey tests
-        id: creevey
+      - name: Start Storybook server (Bun)
+        if: inputs.runtime == 'bun'
+        working-directory: ${{ inputs.fixture }}
+        run: |
+          bunx http-server ./storybook-static -p 6006 -s &
+          bunx wait-on http://localhost:6006 --timeout 30000
+
+      - name: Run Creevey tests (Node)
+        if: inputs.runtime == 'node'
+        id: creevey-node
         working-directory: ${{ inputs.fixture }}
         env:
-          SELENIUM_GRID_URL: http://localhost:4444/wd/hub
           STORYBOOK_URL: http://localhost:6006
           CREEVEY_EXTRA_ARGS: ${{ inputs.creevey-extra-args }}
         run: |
-          run_creevey() {
-            if [ "${{ inputs.package-manager }}" = "pnpm" ]; then
-              pnpm run creevey ${CREEVEY_EXTRA_ARGS}
-            elif [ "${{ inputs.package-manager }}" = "yarn" ]; then
-              yarn creevey ${CREEVEY_EXTRA_ARGS}
-            else
-              npm run creevey -- ${CREEVEY_EXTRA_ARGS}
-            fi
-          }
-
           if [ "${{ inputs.capture-creevey-exit-code }}" = "true" ]; then
             set +e
-            run_creevey
+            npm run creevey -- ${CREEVEY_EXTRA_ARGS}
             exit_code=$?
             echo "exit_code=${exit_code}" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          run_creevey
+          npm run creevey -- ${CREEVEY_EXTRA_ARGS}
+          echo "exit_code=0" >> "$GITHUB_OUTPUT"
+
+      - name: Run Creevey tests (Bun)
+        if: inputs.runtime == 'bun'
+        id: creevey-bun
+        working-directory: ${{ inputs.fixture }}
+        env:
+          STORYBOOK_URL: http://localhost:6006
+          CREEVEY_EXTRA_ARGS: ${{ inputs.creevey-extra-args }}
+        run: |
+          if [ "${{ inputs.capture-creevey-exit-code }}" = "true" ]; then
+            set +e
+            bun run creevey ${CREEVEY_EXTRA_ARGS}
+            exit_code=$?
+            echo "exit_code=${exit_code}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          bun run creevey ${CREEVEY_EXTRA_ARGS}
           echo "exit_code=0" >> "$GITHUB_OUTPUT"
 
       - name: Assert JUnit XML
         if: ${{ inputs.junit-scenario != '' }}
         env:
-          EXIT_CODE: ${{ steps.creevey.outputs.exit_code }}
+          EXIT_CODE: ${{ steps.creevey-node.outputs.exit_code || steps.creevey-bun.outputs.exit_code }}
           SCENARIO: ${{ inputs.junit-scenario }}
           SUMMARY_LABEL: ${{ inputs.junit-summary-label }}
           JUNIT_XML: ${{ steps.paths.outputs.junit_xml }}

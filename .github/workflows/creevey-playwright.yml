@@ -30,96 +30,11 @@ jobs:
             bun-version: '1.3.11'
             runtime: bun
 
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      # Setup for Node.js projects
-      - name: Setup Node.js
-        if: matrix.runtime == 'node'
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-
-      - name: Install unzip for Bun setup
-        if: matrix.runtime == 'bun'
-        run: sudo apt-get update && sudo apt-get install -y unzip
-
-      - name: Setup Bun
-        if: matrix.runtime == 'bun'
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: ${{ matrix.bun-version }}
-
-      # Install dependencies (Node.js)
-      - name: Enable Corepack (Node)
-        if: matrix.runtime == 'node'
-        run: corepack enable
-
-      - name: Prepare package manager (Node)
-        if: matrix.runtime == 'node'
-        run: corepack prepare ${{ matrix.package-manager }}@${{ matrix.package-manager-version }} --activate
-
-      - name: Install dependencies (Node)
-        if: matrix.runtime == 'node'
-        working-directory: ${{ matrix.fixture }}
-        run: npm install
-
-      # Install dependencies (Bun)
-      - name: Install dependencies (Bun)
-        if: matrix.runtime == 'bun'
-        working-directory: ${{ matrix.fixture }}
-        run: bun install
-
-      # Build Storybook (Node)
-      - name: Build Storybook (Node)
-        if: matrix.runtime == 'node'
-        working-directory: ${{ matrix.fixture }}
-        run: npm run build-storybook
-
-      # Build Storybook (Bun)
-      - name: Build Storybook (Bun)
-        if: matrix.runtime == 'bun'
-        working-directory: ${{ matrix.fixture }}
-        run: bun run build-storybook
-
-      # Start Storybook server (Node)
-      - name: Start Storybook server (Node)
-        if: matrix.runtime == 'node'
-        working-directory: ${{ matrix.fixture }}
-        run: |
-          npx http-server ./storybook-static -p 6006 -s &
-          npx wait-on http://localhost:6006 --timeout 30000
-
-      # Start Storybook server (Bun)
-      - name: Start Storybook server (Bun)
-        if: matrix.runtime == 'bun'
-        working-directory: ${{ matrix.fixture }}
-        run: |
-          bunx http-server ./storybook-static -p 6006 -s &
-          bunx wait-on http://localhost:6006 --timeout 30000
-
-      # Run Creevey tests (Node)
-      - name: Run Creevey tests (Node)
-        if: matrix.runtime == 'node'
-        working-directory: ${{ matrix.fixture }}
-        env:
-          STORYBOOK_URL: http://localhost:6006
-        run: npm run creevey -- test
-
-      # Run Creevey tests (Bun)
-      - name: Run Creevey tests (Bun)
-        if: matrix.runtime == 'bun'
-        working-directory: ${{ matrix.fixture }}
-        env:
-          STORYBOOK_URL: http://localhost:6006
-        run: bun run creevey test
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: creevey-report-${{ matrix.fixture }}
-          path: ${{ matrix.fixture }}/report
-          retention-days: 7
+    uses: ./.github/workflows/playwright-template.yml
+    with:
+      fixture: ${{ matrix.fixture }}
+      runtime: ${{ matrix.runtime }}
+      node-version: ${{ matrix.node-version || '' }}
+      package-manager: ${{ matrix.package-manager || 'npm' }}
+      package-manager-version: ${{ matrix.package-manager-version || '' }}
+      bun-version: ${{ matrix.bun-version || '' }}
