@@ -64,6 +64,9 @@ on:
         default: ''
         description: 'Suffix appended to uploaded artifact names'
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
